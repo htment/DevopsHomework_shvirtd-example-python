@@ -94,3 +94,49 @@ curl http://localhost:5000
 ## Лицензия
 
 Этот проект распространяется под лицензией MIT (подробности в файле `LICENSE`).
+
+
+
+
+# Задание
+
+
+
+
+![alt text](image-1.png)
+## Соберем образ 
+```
+docker build -f Dockerfile.python --network host -t myapp:latest .
+```
+```
+ docker compose up -d
+
+```
+
+потестируем
+```
+ docker exec -it shvirtd_app bash
+ ```
+curl -H "X-Real-IP: 192.168.31.11" http://localhost:5000
+
+
+```
+ docker exec -it shvirtd_db mysql -u app -pvery_strong example
+ ```
+
+```
+SHOW DATABASES;
+````
+![alt text](image.png)
+
+
+![alt text](image-2.png)
+
+![alt text](image-3.png)
+
+![alt text](image-4.png)
+
+
+![alt text](image-5.png)
+
+![alt text](image-6.png)
