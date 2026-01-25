@@ -1,3 +1,6 @@
+# Задание 
+https://github.com/netology-code/virtd-homeworks/blob/shvirtd-1/05-virt-04-docker-in-practice/README.md
+
 # shvirtd-example-python
 
 Учебный проект FastAPI-приложения для изучения Docker Compose.
@@ -99,12 +102,12 @@ curl http://localhost:5000
 
 
 # Задание
-
+# 1. Запустим пророект локально
 
 
 
 ![alt text](image-1.png)
-## Соберем образ 
+## 1.1 Соберем образ 
 ```
 docker build -f Dockerfile.python --network host -t myapp:latest .
 ```
@@ -113,12 +116,14 @@ docker build -f Dockerfile.python --network host -t myapp:latest .
 
 ```
 
-потестируем
+## потестируем
 ```
  docker exec -it shvirtd_app bash
  ```
+ сначала локально 
+```
 curl -H "X-Real-IP: 192.168.31.11" http://localhost:5000
-
+```
 
 ```
  docker exec -it shvirtd_db mysql -u app -pvery_strong example
@@ -140,3 +145,176 @@ SHOW DATABASES;
 ![alt text](image-5.png)
 
 ![alt text](image-6.png)
+
+
+# 2. Создание Container Registry в Yandex Cloud
+
+## Установим YC
+```
+curl https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+
+# Инициализация профиля
+yc init
+
+#  Создание registry с именем test
+yc container registry create --name test
+
+# Проверка создания
+yc container registry list
+```
+
+```
+yc resource-manager folder create --name my-new-folder-regstry
+```
+![alt text](image-17.png)
+```
+yc resource-manager folder list
+#переход в дирректорию
+yc config set folder-name my-new-folder-regstry
+
+```
+![alt text](image-8.png)
+![alt text](image-7.png)
+
+```
+yc container registry create --name test --folder-name my-new-folder-regstry
+```
+![alt text](image-9.png)
+
+### Получить ID registry
+```
+yc container registry get test --folder-name my-new-folder-regstry
+```
+```
+yc container registry list
+```
+```
+yc container registry list --folder-name my-new-folder-regstry
+```
+### авторизации Docker в Yandex Container Registry:
+```
+yc container registry configure-docker --folder-name my-new-folder-regstry
+```
+```
+yc container registry get test
+```
+## Команда для сборки образа 
+```
+docker build -f Dockerfile.python -t cr.yandex/crp443irs456mvr1t7f3/myapp:latest .
+```
+
+![alt text](image-10.png)
+
+
+```
+REGISTRY_ID=$(yc container registry get test --format json | jq -r '.id')
+echo "Registry ID: $REGISTRY_ID"
+```
+```
+docker push cr.yandex/$REGISTRY_ID/myapp:latest
+```
+
+
+![alt text](image-12.png)
+
+
+###  Сканирование
+
+Команда для включения автоматического сканирования в Yandex Container Registry:
+
+```
+ yc container image list --repository-name /$REGISTRY_ID/app
+
+```
+```
+yc container image scan crp1vk3n4db5n0hes5mt
+```
+```
+yc container image list-vulnerabilities crp1vk3n4db5n0hes5mt
+```
+
+## список уязвимостей
+```
+ yc container image list-vulnerabilities crp1vk3n4db5n0hes5mt --scan-result-id che24608ign8h8ccjp2u
+ ``````
+УСТАНОВИМ trivy
+```
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin && trivy image cr.yandex/crplu9j8gfmfbrfe2eas/myapp:latest
+```
+
+```
+echo "Scanning image for vulnerabilities..."
+trivy image --format json --output trivy-report.json cr.yandex/$REGISTRY_ID/myapp:latest
+trivy image --format table cr.yandex/$REGISTRY_ID/app:v1
+
+echo "Report saved to trivy-report.json"
+```
+![alt text](image-13.png)
+
+```
+yc container image list
+```
+        
+![alt text](image-16.png)
+
+
+```
+yc container image delete crp1vk3n4db5n0hes5mt
+
+# Потом удалить registry
+yc container registry delete crplu9j8gfmfbrfe2eas
+```
+
+
+# Задание 3
+
+```
+docker compose -f compose_include.yaml up -d
+```
+![alt text](image-18.png)
+
+```
+curl -L http://127.0.0.1:8090
+```
+![alt text](image-19.png)
+
+![alt text](image-20.png)
+
+
+# Задача 4
+## Созадим ВМ YC
+```
+yc compute instance create --name docker-vm --zone ru-central1-a --memory 2GB --cores 2 --create-boot-disk size=20GB,type=network-ssd --network-interface subnet-name=default,nat-ip-version=ipv4 --ssh-key ~/.ssh/id_ed25519.pub
+```
+![alt text](image-22.png)
+![alt text](image-21.png)
+
+![alt text](image-23.png)
+```
+yc vpc network create --name net --folder-name my-new-folder-regstry
+```
+```
+yc vpc subnet create --name default --zone ru-central1-a --network-name net --range 192.168.10.0/24 --folder-name my-new-folder-regstry
+```
+## Комментарий: Создает ВМ с использованием созданной подсети "default" в указанной папке.
+```
+yc compute instance create --name docker-vm --zone ru-central1-a --memory 2GB --cores 2 --create-boot-disk size=20GB,type=network-ssd --network-interface subnet-name=default,nat-ip-version=ipv4 --ssh-key ~/.ssh/id_ed25519.pub --folder-name my-new-folder-regstry
+```
+```
+yc compute instance list
+```
+![alt text](image-24.png)
+
+
+```
+
+ssh -i ~/.ssh/id_ed25519 yc-user@89.169.158.87
+```
+
+```
+sudo apt update && sudo apt install -y docker.io docker-compose git
+```
+Добавляет текущего пользователя в группу docker для работы без sudo и применяет изменения.
+```
+sudo usermod -aG docker $USER && newgrp docker
+```

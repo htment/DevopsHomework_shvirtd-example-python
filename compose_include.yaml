@@ -1,0 +1,40 @@
+# compose.yaml
+version: '3.8'
+include:
+  - proxy.yaml
+
+services:
+  web:
+    image: cr.yandex/crpad4tc7meb9d2glk6s/myapp:latest
+    container_name: shvirtd_app
+    environment:
+      DB_HOST: db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+    networks:
+      backend:
+        ipv4_address: 172.20.0.5
+    restart: unless-stopped
+
+  db:
+    image: mysql:8
+    container_name: shvirtd_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      backend:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+networks:
+  backend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
