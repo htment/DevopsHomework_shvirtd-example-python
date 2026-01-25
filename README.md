@@ -310,11 +310,66 @@ yc compute instance list
 
 ssh -i ~/.ssh/id_ed25519 yc-user@89.169.158.87
 ```
-
+установим докер
 ```
-sudo apt update && sudo apt install -y docker.io docker-compose git
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose && sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 ```
 Добавляет текущего пользователя в группу docker для работы без sudo и применяет изменения.
 ```
 sudo usermod -aG docker $USER && newgrp docker
 ```
+```
+sudo mkdir -p /opt/project && sudo chown $USER:$USER /opt/project
+```
+Качаем проект
+```
+git clone https://github.com/htment/DevopsHomework_shvirtd-example-python.git /opt/project
+```
+![alt text](image-25.png)
+
+### Запускаем проект
+```
+cd /opt/project && docker compose -f compose_include.yaml up -d
+```
+![alt text](image-26.png)
+
+копируем с хостовой машины
+```
+scp -i ~/.ssh/id_ed25519 ~/.docker/config.json yc-user@89.169.158.87:~/.docker/
+```
+
+![alt text](image-27.png)
+```
+docker compose -f compose_include.yaml up -d
+```
+опять ошибка
+![alt text](image-28.png)
+
+```
+sudo apt install pass -y
+```
+
+```
+curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -a
+```
+```
+ yc init --folder-name my-new-folder-regstry
+ ```
+
+ ![alt text](image-29.png)
+ИИ - победил
+
+ ![alt text](image-30.png)
+
+ ```
+ curl -L http://localhost:8090
+ ```
+
+ ![alt text](image-31.png)
+
+
+```
+  curl -L http://89.169.158.87:8090
+```
+
+![alt text](image-32.png)
