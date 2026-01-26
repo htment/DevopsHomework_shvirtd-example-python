@@ -373,3 +373,68 @@ curl -s https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -
 ```
 
 ![alt text](image-32.png)
+
+
+# Задача 6 
+Скачайте docker образ hashicorp/terraform:latest и скопируйте бинарный файл /bin/terraform на свою локальную машину, используя dive и docker save. Предоставьте скриншоты действий .
+
+## Скачивание образа Terraform
+```
+docker pull hashicorp/terraform:latest
+```
+![alt text](image-33.png)
+```
+docker images hashicorp/terraform:latest
+```
+
+![alt text](image-34.png)
+
+
+анализ через dive
+```
+docker run --rm -it  -v /var/run/docker.sock:/var/run/docker.sock   wagoodman/dive:latest hashicorp/terraform:latest
+```
+![alt text](image-35.png)
+```
+mkdir ~/terraform_extract
+cd ~/terraform_extract
+docker save hashicorp/terraform:latest -o terraform.tar
+ll
+```
+```
+mkdir -p terraform_layer
+```
+
+```
+# Распакуйте слой (это tar архив)
+tar -xf blobs/sha256/d7ce41a85ad466f7c820e6abb07f005d4903828399fab2ccd4a8aff3d7e6a0f2 -C terraform_layer/
+```
+```
+ll terraform_layer/bin/terraform
+```
+![alt text](image-37.png)
+```
+cp terraform_layer/bin/terraform ~/
+```
+```
+chmod +x ~/terraform
+```
+
+## через docker
+```
+docker create --name temp_terraform hashicorp/terraform:latest
+```
+![alt text](image-36.png)
+```
+docker cp temp_terraform:/bin/terraform ./terraform_local
+```
+```
+ ll terraform_l
+```
+![alt text](image-38.png)
+сравним версии
+```
+ ./terraform_local version
+  ./terraform_layer/bin/terraform version
+```
+![alt text](image-39.png)
